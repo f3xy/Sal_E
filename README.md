@@ -22,8 +22,9 @@ To-Do List:
 -User Customization if desired later on
 -Generate Plist for ARD
 -????
-
+Before:
 ![Before](/Media/Screenshots/Before.png)
+After:
 ![After](/Media/Screenshots/After.png)
 
 
