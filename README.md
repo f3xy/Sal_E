@@ -1,6 +1,6 @@
 # SAL_E
-Enhancements for SAL
-Author: Johnny Brown
+Enhancements for SAL <br />
+Author: Johnny Brown <br />
 
 What does it do...
 
@@ -10,21 +10,19 @@ Script adds various variables to the page once loaded, useful if you're looking 
 Release Notes:
 
 1.0 - April 17th, 2018
-- Initial release (Chrome and Safari for now b/c FF couldn't "Just Work")
--Search Result Modifications: basicallly adds what I believe to be the most searched variables when clickin on individual machines
--Auto Load all serach results
--adds IP Address column (with VNC links for Screen Sharing, username included)
--Serial Number
--macOS version
--Free Disk Space
+- Initial release (Chrome and Safari for now b/c FF couldn't "Just Work") <br />
+    -Search Result Modifications: basicallly adds what I believe to be the most searched variables when clickin on individual machines <br />
+    -Auto Load all serach results <br />
+    -adds IP Address column (with VNC links for Screen Sharing, username included) <br />
+    -Serial Number <br />
+    -macOS version <br />
+    -Free Disk Space <br />
 
-To-Do List:
--User Customization if desired later on
--Generate Plist for ARD
--????
-Before:
+To-Do List: <br />
+-User Customization if desired later on <br />
+-Generate Plist for ARD <br />
+-???? <br />
+Before: <br />
 ![Before](/Media/Screenshots/Before.png)
-After:
+After:  <br />
 ![After](/Media/Screenshots/After.png)
-
-
