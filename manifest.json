@@ -1,0 +1,21 @@
+{
+    "manifest_version": 2,
+    "name": "SAL_E",
+    "version": "1.0",
+    "description": "Sal Enhancements for Chrome",
+    "background": {
+    "scripts": [
+        "jq.js",
+        "jquery.dataTables.min.js",
+        "EndScript.js"]
+  },
+    "content_scripts": [
+      {
+    "matches": ["*"],
+    "js": [
+        "jq.js",
+        "jquery.dataTables.min.js",
+        "EndScript.js"]
+      }
+]
+  }
