@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "SAL_E",
-    "version": "1.0",
+    "version": "1.01",
     "description": "Sal Enhancements for Chrome",
     "background": {
     "scripts": [
@@ -11,7 +11,7 @@
   },
     "content_scripts": [
       {
-    "matches": ["*"],
+    "matches": ["https://onemorething.kennesaw.edu/*"],
     "js": [
         "jq.js",
         "jquery.dataTables.min.js",

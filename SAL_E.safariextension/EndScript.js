@@ -114,9 +114,9 @@ function enhanceSAL() {
             //Actually insert the variables obtained above
             ip_array = ip_address.split(", ");
             for(j = 0; j < ip_array.length; j++)
-              insertVNC[i].innerHTML += ' <a href="vnc://:@' + ip_array[j] +'">' + ip_array[j]+'</a> <br/> ';
+              insertVNC[i].innerHTML += ' <a href="vnc://itshw:@' + ip_array[j] +'">' + ip_array[j]+'</a> <br/> ';
             insertSerial[i].innerHTML = serial_num;
-            insertVersion[i].innerHTML = macos_vers.match(/\d{2,2}\.\d{1,2}\.\d{1,2}/);
+            insertVersion[i].innerHTML = macos_vers.match(/\d{2,2}\.\d{1,2}\.?\d{1,2}/);
             insertFreeDiskSpace[i].innerHTML = free_disk;
 
           } //end if statement
@@ -130,11 +130,12 @@ function enhanceSAL() {
 }; //end
 
 //regex for search result pages
-var urlCheck = new RegExp(/\/(search)\/\?(q)\=(\w)*/); //url pathname must be search/?q={whatever you searched}
+var search = new RegExp(/\/(search)\/\?(q)\=(\w)*/); //url pathname must be search/?q={whatever you searched}
+var adv_search = new RegExp(/\/(search)\/(run_search)\/\d+/);
 //get path name and search query from URL
 var whereami = (window.location.pathname + window.location.search);
 // Checks path name and query against regrex and only run if it meets the requirements to prevent script running on pages not needed
 $(document).ready(function() {
-  if (urlCheck.test(whereami))
+  if (search.test(whereami) || adv_search.test(whereami))
     enhanceSAL()
 });
