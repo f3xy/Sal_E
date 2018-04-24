@@ -13,9 +13,6 @@ Release Notes:
     -macOS version
     -Free Disk Space
 
-
-
-
 To-Do List:
 -User Customization if desired later on
 -Generate Plist for ARD
@@ -23,24 +20,19 @@ To-Do List:
 */
 
 
-
-
 function enhanceSAL() {
-  // The following will change the page to load all of the search results to make things easier.
+
   //Because Chrome is stupid, this is to Inject Javascript natively... thanks...
-  var actualCode = `$('#DataTables_Table_0.groupList.table.table-striped.table-condensed.dataTable.no-footer').DataTable().page.len(-1).draw();`;
+  var selectAll = `$('#DataTables_Table_0.groupList.table.table-striped.table-condensed.dataTable.no-footer').DataTable().page.len(-1).draw();`;
   var script = document.createElement('script');
-  script.textContent = actualCode;
+  script.textContent = selectAll;
   (document.head||document.documentElement).appendChild(script);
   script.remove();
 
   //Get table that holds the returned search results
   var table2Edit = document.getElementById('DataTables_Table_0');
-
   //Get the table grabbed above's Header
   var tableHead = table2Edit.tHead.children[0];
-
-
   //Creates Array for Titles and variables for the title of Columns to Add
   var col2Insert = [];
   var ip_address = "IP Address(s)";
@@ -48,32 +40,26 @@ function enhanceSAL() {
   var macos_vers = "macOS Version";
   var free_disk = "Free Disk Space";
   var vnc = "IP Address + VNC";
-
-// Can ddd later if Needed
   var ram = "RAM";
   var munki_manifest = "Munki Manifest";
-
-//Insert blank TH for each Column to Display; I should probably make this customizable at some point... later
+  //Insert blank TH for each Column to Display; I should probably make this customizable at some point... later
   col2Insert = [document.createElement('th'),document.createElement('th'),document.createElement('th'),document.createElement('th'),document.createElement('th')];
-
-// Assign titles created above in static order; should make this customizable in the future as well
+  // Assign titles created above in static order; should make this customizable in the future as well
   col2Insert[0].innerHTML = vnc;
   col2Insert[1].innerHTML = serial_num;
   col2Insert[2].innerHTML = macos_vers;
   col2Insert[3].innerHTML = free_disk;
 
-//Takes total number of columns to find a percentage that each column will split equally
+  //Takes total number of columns to find a percentage that each column will split equally
   numof_col2Insert = col2Insert.length + 3;
   var one = 1;
   th_percentage = (one /= numof_col2Insert) * 100;
-//Add Columns to Header and resize them with the calculated percentage above
+  //Add Columns to Header and resize them with the calculated percentage above
   for (i = 0; i < col2Insert.length; i++) {
     tableHead.appendChild(col2Insert[i]);
-    table2Edit.getElementsByTagName('th')[i].style.width=th_percentage+"%";}
-
-  //add Column to each search result to hold IP Address
-
-//Get Number of Machines returned in search result
+    table2Edit.getElementsByTagName('th')[i].style.width=th_percentage+"%";
+  }
+  //Get Number of Machines returned in search result
   rows = table2Edit.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
   length = rows.length;
 
@@ -84,15 +70,20 @@ function enhanceSAL() {
   var insertFreeDiskSpace = [];
   var url;
   var htmlString;
-// create array to hold XMLHttpRequests
-    var xhr = [], i;
-//iterate through each of the returned machines to add various elements to appended columns
+
+  //for ARD PLIST
+  var hostname = [];
+  var hostIP = [];
+
+  // create array to hold XMLHttpRequests
+  var xhr = [], i;
+
+  //iterate through each of the returned machines to add various elements to appended columns
   for (i = 0; i < length; i++) {
     (function(i) {
     // new XMLHttpRequest
     xhr[i] = new XMLHttpRequest();
     // gets machine url from href tag
-
     url = rows[i].getElementsByTagName("td")[0].getElementsByTagName('a')[0].getAttribute('href');
     //Insert the desired values at the end of each row; will try to make this customizable later as well
     insertVNC[i] = rows[i].insertCell(-1);
@@ -114,28 +105,65 @@ function enhanceSAL() {
             //Actually insert the variables obtained above
             ip_array = ip_address.split(", ");
             for(j = 0; j < ip_array.length; j++)
-              insertVNC[i].innerHTML += ' <a href="vnc://itshw:@' + ip_array[j] +'">' + ip_array[j]+'</a> <br/> ';
+            insertVNC[i].innerHTML += ' <a href="vnc://itshw:@' + ip_array[j] +'">' + ip_array[j]+'</a> <br/> ';
             insertSerial[i].innerHTML = serial_num;
             insertVersion[i].innerHTML = macos_vers.match(/\d{2,2}\.\d{1,2}\.?\d{1,2}/);
             insertFreeDiskSpace[i].innerHTML = free_disk;
 
-          } //end if statement
-    };//end xhr function
+            // For ARD
+            hostname[i] = "Computer:" + i;
+            hostIP[i] = ip_array[0];
+          }
+
+    };
     //"Get" the "Url"... true means asyncrhonous
       xhr[i].open("GET",url,true);
       xhr[i].send();
     })(i); //end for loop
 
     }
-}; //end
+    console.log(hostname);
+    console.log(hostIP)
+    //console.log(hostIP[0]);
+    //genPlist("Test",hostname,hostIP);
+};
 
-//regex for search result pages
-var search = new RegExp(/\/(search)\/\?(q)\=(\w)*/); //url pathname must be search/?q={whatever you searched}
-var adv_search = new RegExp(/\/(search)\/(run_search)\/\d+/);
-//get path name and search query from URL
-var whereami = (window.location.pathname + window.location.search);
-// Checks path name and query against regrex and only run if it meets the requirements to prevent script running on pages not needed
+// Taken shamelessly from https://stackoverflow.com/a/105074/7722961 so I don't have to re-invent the wheel
+function guid() {
+  function s4() {
+    return Math.floor((1 + Math.random()) * 0x10000)
+      .toString(16)
+      .substring(1);
+  }
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+};
+
+function genPlist(a,b,c) {
+  var table2Edit = document.getElementById('DataTables_Table_0');
+  rows = table2Edit.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+  length = rows.length;
+
+ var header = `?xml version="1.0" encoding="UTF-8"?>
+ <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+ <plist version="1.0">
+ <dict>
+ 	<key>items</key>
+ 	<array> \n`;
+
+  var body = '';
+  var footer = '';
+
+
+};
+
 $(document).ready(function() {
-  if (search.test(whereami) || adv_search.test(whereami))
-    enhanceSAL()
+  var whereami = (window.location.pathname + window.location.search);
+  return [
+    /\/(search)\/\?(q)\=(\w)*/gi, //regex for normal search results page
+    /\/(search)\/(run_search)\/\d+/gi, //regex for advanced search
+    ///\/(list)\/.*/gi //adds support for list pages but it doesn't work great so I'll explore it later
+  ].some(function(regexp){
+    if (regexp.test(whereami))
+    enhanceSAL();
+    })
 });
