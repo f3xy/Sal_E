@@ -18,6 +18,55 @@ To-Do List:
 -Generate Plist for ARD
 -????
 */
+//Get table that holds the returned search results
+var table2Edit = document.getElementById('DataTables_Table_0');
+//Get the table grabbed above's Header
+var tableHead = table2Edit.tHead.children[0];
+//Creates Array for Titles and variables for the title of Columns to Add
+var col2Insert = [];
+var ip_address = "IP Address(s)";
+var serial_num = "Serial Number";
+var macos_vers = "macOS Version";
+var free_disk = "Free Disk Space";
+var vnc = "IP Address + VNC";
+var ram = "RAM";
+var munki_manifest = "Munki Manifest";
+
+//Insert blank TH for each Column to Display; I should probably make this customizable at some point... later
+col2Insert = [document.createElement('th'),document.createElement('th')
+  ,document.createElement('th')
+  ,document.createElement('th')
+  ,document.createElement('th') ];
+
+button2Insert = document.createElement('a');
+
+col2Insert[0].innerHTML = vnc;
+col2Insert[1].innerHTML = serial_num;
+col2Insert[2].innerHTML = macos_vers;
+col2Insert[3].innerHTML = free_disk;
+
+var one = 1;
+
+//creates array to hold the corresponding values for each machine (allows me to use asyncrhonous XMLHttpRequest and makes execution MUCH faster)
+var insertVNC = [];
+var insertSerial = [];
+var insertVersion = [];
+var insertFreeDiskSpace = [];
+var url;
+var htmlString;
+
+//for ARD PLIST
+var hostname = [];
+var hostIP = [];
+var plistURI;
+var plistText;
+
+// create array to hold XMLHttpRequests
+var xhr = [], i;
+
+//Get Number of Machines returned in search result
+var rows;
+var length;
 
 
 function enhanceSAL() {
@@ -29,55 +78,24 @@ function enhanceSAL() {
   (document.head||document.documentElement).appendChild(script);
   script.remove();
 
-  //Get table that holds the returned search results
-  var table2Edit = document.getElementById('DataTables_Table_0');
-  //Get the table grabbed above's Header
-  var tableHead = table2Edit.tHead.children[0];
-  //Creates Array for Titles and variables for the title of Columns to Add
-  var col2Insert = [];
-  var ip_address = "IP Address(s)";
-  var serial_num = "Serial Number";
-  var macos_vers = "macOS Version";
-  var free_disk = "Free Disk Space";
-  var vnc = "IP Address + VNC";
-  var ram = "RAM";
-  var munki_manifest = "Munki Manifest";
-  //Insert blank TH for each Column to Display; I should probably make this customizable at some point... later
-  col2Insert = [document.createElement('th'),document.createElement('th'),document.createElement('th'),document.createElement('th'),document.createElement('th')];
-  // Assign titles created above in static order; should make this customizable in the future as well
-  col2Insert[0].innerHTML = vnc;
-  col2Insert[1].innerHTML = serial_num;
-  col2Insert[2].innerHTML = macos_vers;
-  col2Insert[3].innerHTML = free_disk;
+  //add button to download Plist
+  //var sideButtons =  document.getElementsByClassName('sidebar-nav navbar-collapse')[0];
+  var sidebarLI = document.getElementsByClassName('sidebar-nav navbar-collapse')[0].getElementsByTagName('ul')[0].getElementsByTagName('li')[2];
+  var button2Copy = document.getElementsByClassName('sidebar-nav navbar-collapse')[0].getElementsByTagName('ul')[0].getElementsByTagName('li')[2].getElementsByTagName('a')[0];
+  var button2Insert = button2Copy.cloneNode(true);
+  sidebarLI.appendChild(button2Insert);
+
 
   //Takes total number of columns to find a percentage that each column will split equally
   numof_col2Insert = col2Insert.length + 3;
-  var one = 1;
   th_percentage = (one /= numof_col2Insert) * 100;
   //Add Columns to Header and resize them with the calculated percentage above
   for (i = 0; i < col2Insert.length; i++) {
     tableHead.appendChild(col2Insert[i]);
     table2Edit.getElementsByTagName('th')[i].style.width=th_percentage+"%";
-  }
-  //Get Number of Machines returned in search result
+      }
   rows = table2Edit.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
   length = rows.length;
-
-  //creates array to hold the corresponding values for each machine (allows me to use asyncrhonous XMLHttpRequest and makes execution MUCH faster)
-  var insertVNC = [];
-  var insertSerial = [];
-  var insertVersion = [];
-  var insertFreeDiskSpace = [];
-  var url;
-  var htmlString;
-
-  //for ARD PLIST
-  var hostname = [];
-  var hostIP = [];
-
-  // create array to hold XMLHttpRequests
-  var xhr = [], i;
-
   //iterate through each of the returned machines to add various elements to appended columns
   for (i = 0; i < length; i++) {
     (function(i) {
@@ -111,7 +129,8 @@ function enhanceSAL() {
             insertFreeDiskSpace[i].innerHTML = free_disk;
 
             // For ARD
-            hostname[i] = "Computer:" + i;
+            hostname[i] = rows[i].getElementsByTagName("td")[0].getElementsByTagName('a')[0].innerHTML;
+            hostname[i] = hostname[i].replace(/\s+/g, '');
             hostIP[i] = ip_array[0];
           }
 
@@ -122,8 +141,7 @@ function enhanceSAL() {
     })(i); //end for loop
 
     }
-    console.log(hostname);
-    console.log(hostIP)
+
     //console.log(hostIP[0]);
     //genPlist("Test",hostname,hostIP);
 };
@@ -138,20 +156,47 @@ function guid() {
   return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
 };
 
-function genPlist(a,b,c) {
+// Referenced: https://github.com/Error-freeIT/PHP-ARD-Import-List-Generator/blob/master/ardgen.php
+function genPlist() {
   var table2Edit = document.getElementById('DataTables_Table_0');
   rows = table2Edit.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
   length = rows.length;
 
- var header = `?xml version="1.0" encoding="UTF-8"?>
+  var plistText = '';
+
+ var header = `<?xml version="1.0" encoding="UTF-8"?>
  <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
  <plist version="1.0">
  <dict>
- 	<key>items</key>
- 	<array> \n`;
+   <key>items</key>
+   <array> \n`;
 
   var body = '';
-  var footer = '';
+  var footer = `    </array>
+    <key>listName</key>
+    <string>Test</string>
+    <key>uuid</key>
+    <string>${guid()}</string>
+</dict>
+</plist>`;
+
+  for(k=0;k<length;k++) {
+    body += `     <dict>
+       <key>name</key>
+       <string>${hostname[k]}</string>
+       <key>networkAddress</key>
+       <string>${hostIP[k]}</string>
+       <key>networkPort</key>
+       <integer>3283</integer>
+       <key>vncPort</key>
+       <integer>5900</integer>
+      </dict>\n`; }
+
+     plistText = (header + body + footer);
+     plistURI = ('data:application/x-plist,' + encodeURIComponent(plistText));
+     lastIndex = document.getElementsByClassName('sidebar-nav navbar-collapse')[0].getElementsByTagName('ul')[0].getElementsByTagName('li')[2].getElementsByTagName('a').length;
+     var newButton = document.getElementsByClassName('sidebar-nav navbar-collapse')[0].getElementsByTagName('ul')[0].getElementsByTagName('li')[2].getElementsByTagName('a')[lastIndex-1];
+     newButton.setAttribute('href',`${plistURI}`);
 
 
 };
@@ -163,7 +208,9 @@ $(document).ready(function() {
     /\/(search)\/(run_search)\/\d+/gi, //regex for advanced search
     ///\/(list)\/.*/gi //adds support for list pages but it doesn't work great so I'll explore it later
   ].some(function(regexp){
-    if (regexp.test(whereami))
+    if (regexp.test(whereami)){
     enhanceSAL();
+    setTimeout(function() {genPlist()},10000);
+  }
     })
 });
