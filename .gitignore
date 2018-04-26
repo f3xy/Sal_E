@@ -1,0 +1,15 @@
+#Chrome Manifest
+manifest.json
+
+#Safari Extension Directory
+/SAL_E.safariextension/
+
+#DS_STORE
+.DS_STORE
+
+#Source Files 
+jquery.dataTables.min.js
+
+
+#Others
+LICENSE
