@@ -11,7 +11,7 @@
   },
     "content_scripts": [
       {
-    "matches": ["https://onemorething.kennesaw.edu/*"],
+    "matches": ["<insert url here>/*"],
     "js": [
         "jq.js",
         "jquery.dataTables.min.js",
