@@ -19,9 +19,9 @@ To-Do List:
 -????
 */
 //Get table that holds the returned search results
-var table2Edit = document.getElementById('DataTables_Table_0');
+var table2Edit;
 //Get the table grabbed above's Header
-var tableHead = table2Edit.tHead.children[0];
+var tableHead;
 //Creates Array for Titles and variables for the title of Columns to Add
 var col2Insert = [];
 var ip_address = "IP Address(s)";
@@ -33,12 +33,18 @@ var ram = "RAM";
 var munki_manifest = "Munki Manifest";
 
 //Insert blank TH for each Column to Display; I should probably make this customizable at some point... later
-col2Insert = [document.createElement('th'),document.createElement('th')
+col2Insert = [
+   document.createElement('th')
+  ,document.createElement('th')
   ,document.createElement('th')
   ,document.createElement('th')
   ,document.createElement('th') ];
 
 button2Insert = document.createElement('a');
+var sidebarLI;
+var sideBarLength;
+var button2Copy;
+var button2Insert;
 
 col2Insert[0].innerHTML = vnc;
 col2Insert[1].innerHTML = serial_num;
@@ -63,6 +69,8 @@ var plistText;
 
 // create array to hold XMLHttpRequests
 var xhr = [], i;
+var done = [];
+var ready = true;
 
 //Get Number of Machines returned in search result
 var rows;
@@ -78,13 +86,14 @@ function enhanceSAL() {
   (document.head||document.documentElement).appendChild(script);
   script.remove();
 
-  //add button to download Plist
-  //var sideButtons =  document.getElementsByClassName('sidebar-nav navbar-collapse')[0];
-  var sidebarLI = document.getElementsByClassName('sidebar-nav navbar-collapse')[0].getElementsByTagName('ul')[0].getElementsByTagName('li')[2];
-  var button2Copy = document.getElementsByClassName('sidebar-nav navbar-collapse')[0].getElementsByTagName('ul')[0].getElementsByTagName('li')[2].getElementsByTagName('a')[0];
-  var button2Insert = button2Copy.cloneNode(true);
-  sidebarLI.appendChild(button2Insert);
+  //prep for button addition for ARD Plist Function
+  sideBarLength = document.getElementsByClassName('sidebar-nav navbar-collapse')[0].getElementsByTagName('ul')[0].getElementsByTagName('li').length;
+  sidebarLI = document.getElementsByClassName('sidebar-nav navbar-collapse')[0].getElementsByTagName('ul')[0].getElementsByTagName('li')[sideBarLength - 1];
+  button2Copy = document.getElementsByClassName('sidebar-nav navbar-collapse')[0].getElementsByTagName('ul')[0].getElementsByTagName('li')[2].getElementsByTagName('a')[0];
+  button2Insert = button2Copy.cloneNode(true);
 
+  var table2Edit = document.getElementById('DataTables_Table_0');
+  var tableHead = table2Edit.tHead.children[0];
 
   //Takes total number of columns to find a percentage that each column will split equally
   numof_col2Insert = col2Insert.length + 3;
@@ -132,18 +141,19 @@ function enhanceSAL() {
             hostname[i] = rows[i].getElementsByTagName("td")[0].getElementsByTagName('a')[0].innerHTML;
             hostname[i] = hostname[i].replace(/\s+/g, '');
             hostIP[i] = ip_array[0];
-          }
+            done[i] = 1;
 
-    };
+
+                }
+
+            };
+
     //"Get" the "Url"... true means asyncrhonous
       xhr[i].open("GET",url,true);
       xhr[i].send();
-    })(i); //end for loop
+        })(i); //end for loop
 
     }
-
-    //console.log(hostIP[0]);
-    //genPlist("Test",hostname,hostIP);
 };
 
 // Taken shamelessly from https://stackoverflow.com/a/105074/7722961 so I don't have to re-invent the wheel
@@ -195,14 +205,22 @@ function genPlist() {
      plistText = (header + body + footer);
      plistURI = ('data:application/x-plist,' + encodeURIComponent(plistText));
      lastIndex = document.getElementsByClassName('sidebar-nav navbar-collapse')[0].getElementsByTagName('ul')[0].getElementsByTagName('li')[2].getElementsByTagName('a').length;
-     var newButton = document.getElementsByClassName('sidebar-nav navbar-collapse')[0].getElementsByTagName('ul')[0].getElementsByTagName('li')[2].getElementsByTagName('a')[lastIndex-1];
-     newButton.setAttribute('href',`${plistURI}`);
 
-
+    //  sidebarLI.appendChild(button2Insert);
+     button2Insert.setAttribute('href',`${plistURI}`);
+     button2Insert.innerHTML = "Export ARD Plist";
+     sidebarLI.appendChild(button2Insert);
 };
-
+function checkXHR() {
+  if (xhr[length-1].status != 200){
+    window.setTimeout(checkXHR,100);
+  } else {
+    genPlist();
+  }
+}
 $(document).ready(function() {
   var whereami = (window.location.pathname + window.location.search);
+  var loading = true;
   return [
     /\/(search)\/\?(q)\=(\w)*/gi, //regex for normal search results page
     /\/(search)\/(run_search)\/\d+/gi, //regex for advanced search
@@ -210,7 +228,7 @@ $(document).ready(function() {
   ].some(function(regexp){
     if (regexp.test(whereami)){
     enhanceSAL();
-    setTimeout(function() {genPlist()},10000);
+    checkXHR();
   }
     })
 });
