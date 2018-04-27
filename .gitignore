@@ -7,9 +7,12 @@ manifest.json
 #DS_STORE
 .DS_STORE
 
-#Source Files 
+#Source Files
 jquery.dataTables.min.js
 
 
 #Others
 LICENSE
+
+#BUILD
+/Build/

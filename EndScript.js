@@ -45,6 +45,9 @@ var sidebarLI;
 var sideBarLength;
 var button2Copy;
 var button2Insert;
+var copyTextBox;
+var insertTextBox;
+
 
 col2Insert[0].innerHTML = vnc;
 col2Insert[1].innerHTML = serial_num;
@@ -172,6 +175,7 @@ function genPlist() {
   rows = table2Edit.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
   length = rows.length;
 
+  var container_name = prompt("Name of Container for Ard");
   var plistText = '';
 
  var header = `<?xml version="1.0" encoding="UTF-8"?>
@@ -184,7 +188,7 @@ function genPlist() {
   var body = '';
   var footer = `    </array>
     <key>listName</key>
-    <string>Test</string>
+    <string>${container_name}</string>
     <key>uuid</key>
     <string>${guid()}</string>
 </dict>
@@ -204,23 +208,32 @@ function genPlist() {
 
      plistText = (header + body + footer);
      plistURI = ('data:application/x-plist,' + encodeURIComponent(plistText));
-     lastIndex = document.getElementsByClassName('sidebar-nav navbar-collapse')[0].getElementsByTagName('ul')[0].getElementsByTagName('li')[2].getElementsByTagName('a').length;
+     //window.open(plistURI, container_name + '.plist');
+     var download = document.createElement('a');
+     download.download = container_name + '.plist';
+     download.href = plistURI;
+     download.click();
 
-    //  sidebarLI.appendChild(button2Insert);
-     button2Insert.setAttribute('href',`${plistURI}`);
-     button2Insert.innerHTML = "Export ARD Plist";
-     sidebarLI.appendChild(button2Insert);
 };
 function checkXHR() {
   if (xhr[length-1].status != 200){
     window.setTimeout(checkXHR,100);
   } else {
-    genPlist();
+    addButton();
   }
+}
+
+function addButton() {
+
+  button2Insert.innerHTML = "Export ARD Plist";
+  button2Insert.setAttribute('href',`javascript:void(0)`);
+  button2Insert.addEventListener("click", genPlist, false);
+  sidebarLI.appendChild(button2Insert);
+
 }
 $(document).ready(function() {
   var whereami = (window.location.pathname + window.location.search);
-  var loading = true;
+  
   return [
     /\/(search)\/\?(q)\=(\w)*/gi, //regex for normal search results page
     /\/(search)\/(run_search)\/\d+/gi, //regex for advanced search
