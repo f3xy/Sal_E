@@ -6,6 +6,8 @@ What does it do...
 
 Currently SAL_E enhances search results adding a few columns of useful information to the user from having to click on a machine to find useful information such as an ip address or current macos version(see below). It uses a browser extension to install, but the script is all javascript run once the page is loaded.
 
+Disclaimer: I removed the manifest for chrome and the Safari Extension folder, if you want to build this yourself you'd need to create a new extension, point the extension to your SAL URL, and add the enclosed 
+endscript.js file.
 
 Release Notes:
 
