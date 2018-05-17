@@ -1,29 +1,12 @@
 /* Script adds various variables to the page once loaded, useful if you're looking to get a particular variable quickly or see a bigger picture of your search results
 
 Author: Johnny Brown
-
-Release Notes:
-
-1.0 - April 17th, 2018
-  - Initial release (Chrome and Safari for now b/c FF couldn't "Just Work")
-  -Search Result Modifications: basicallly adds what I believe to be the most searched variables when clickin on individual machines
-    -Auto Load all serach results
-    -adds IP Address column (with VNC links for Screen Sharing, username included)
-    -Serial Number
-    -macOS version
-    -Free Disk Space
-
-To-Do List:
--User Customization if desired later on
--Generate Plist for ARD
--????
 */
-//Get table that holds the returned search results
+
 var table2Edit;
-//Get the table grabbed above's Header
 var tableHead;
-//Creates Array for Titles and variables for the title of Columns to Add
-var col2Insert = [];
+
+//variables for column title
 var ip_address = "IP Address(s)";
 var serial_num = "Serial Number";
 var macos_vers = "macOS Version";
@@ -32,7 +15,7 @@ var vnc = "IP Address + VNC";
 var ram = "RAM";
 var munki_manifest = "Munki Manifest";
 
-//Insert blank TH for each Column to Display; I should probably make this customizable at some point... later
+//generate a th (Title) for each column being inserted
 col2Insert = [
    document.createElement('th')
   ,document.createElement('th')
@@ -40,12 +23,14 @@ col2Insert = [
   ,document.createElement('th')
   ,document.createElement('th') ];
 
+//intialize button to copy and insert along with variables needed in addButton()
 button2Insert = document.createElement('a');
 var sidebarLI;
 var sideBarLength;
 var button2Copy;
 var button2Insert;
 
+//header title for variables
 col2Insert[0].innerHTML = vnc;
 col2Insert[1].innerHTML = serial_num;
 col2Insert[2].innerHTML = macos_vers;
@@ -53,7 +38,7 @@ col2Insert[3].innerHTML = free_disk;
 
 var one = 1;
 
-//creates array to hold the corresponding values for each machine (allows me to use asyncrhonous XMLHttpRequest and makes execution MUCH faster)
+//array for each column being added; labelled by variable
 var insertVNC = [];
 var insertSerial = [];
 var insertVersion = [];
@@ -111,17 +96,21 @@ function enhanceSAL() {
 
   for (i = 0; i < length; i++){
     url[i] = rows[i].getElementsByTagName("td")[0].getElementsByTagName('a')[0].getAttribute('href');
+    console.log(url[i]);
     insertVNC[i] = rows[i].insertCell(-1);
     insertSerial[i] = rows[i].insertCell(-1);
     insertVersion[i] = rows[i].insertCell(-1);
     insertFreeDiskSpace[i] = rows[i].insertCell(-1);}
-  console.log(url);
 
-var promises = url.map(url =>
-        fetch(url,{
-          credentials: 'include'
-        }).then(resp => resp.text())
-      );
+    console.log(url);
+
+    var promises = url.map(url =>
+          fetch("https://onemorething.kennesaw.edu" + url,{
+            credentials: 'include'
+          }).then(resp => resp.text())
+        );
+        console.log(promises);
+
       Promise.all(promises).then(texts => {
 
         for (i = 0; i < url.length; i++) {
@@ -148,7 +137,7 @@ var promises = url.map(url =>
                 hostIP[i] = ip_array[0];
                 done[i] = 1;}
 
-      })
+      }).then(addButton);
 
 
 };
@@ -208,13 +197,61 @@ function genPlist() {
      button2Insert.innerHTML = "Export ARD Plist";
      sidebarLI.appendChild(button2Insert);
 };
-function checkXHR() {
-  if (xhr[length-1].status != 200){
-    window.setTimeout(checkXHR,100);
-  } else {
-    genPlist();
-  }
+function genPlist() {
+  var table2Edit = document.getElementById('DataTables_Table_0');
+  rows = table2Edit.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+  length = rows.length;
+
+  var container_name = prompt("Name of Container for Ard");
+  var plistText = '';
+
+ var header = `<?xml version="1.0" encoding="UTF-8"?>
+ <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+ <plist version="1.0">
+ <dict>
+   <key>items</key>
+   <array> \n`;
+
+  var body = '';
+  var footer = `    </array>
+    <key>listName</key>
+    <string>${container_name}</string>
+    <key>uuid</key>
+    <string>${guid()}</string>
+</dict>
+</plist>`;
+
+  for(k=0;k<length;k++) {
+    body += `     <dict>
+       <key>name</key>
+       <string>${hostname[k]}</string>
+       <key>networkAddress</key>
+       <string>${hostIP[k]}</string>
+       <key>networkPort</key>
+       <integer>3283</integer>
+       <key>vncPort</key>
+       <integer>5900</integer>
+      </dict>\n`; }
+
+     plistText = (header + body + footer);
+     plistURI = ('data:application/x-plist,' + encodeURIComponent(plistText));
+     //window.open(plistURI, container_name + '.plist');
+     var download = document.createElement('a');
+     download.download = container_name + '.plist';
+     download.href = plistURI;
+     console.log(plistURI);
+     download.click();
+
 }
+
+function addButton() {
+  button2Insert.innerHTML = "Export ARD Plist";
+  button2Insert.setAttribute('href',`javascript:void(0)`);
+  button2Insert.addEventListener("click", genPlist, false);
+  sidebarLI.appendChild(button2Insert);
+}
+
+
 $(document).ready(function() {
   var whereami = (window.location.pathname + window.location.search);
   var loading = true;
