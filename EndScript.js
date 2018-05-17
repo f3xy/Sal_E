@@ -20,15 +20,18 @@ col2Insert = [
    document.createElement('th')
   ,document.createElement('th')
   ,document.createElement('th')
-  ,document.createElement('th')
-  ,document.createElement('th') ];
+  ,document.createElement('th')];
 
+col2Insert[0].id = "ipHeader";
 //intialize button to copy and insert along with variables needed in addButton()
-button2Insert = document.createElement('a');
 var sidebarLI;
 var sideBarLength;
 var button2Copy;
 var button2Insert;
+
+var header2Insert;
+var header2Copy;
+
 
 //header title for variables
 col2Insert[0].innerHTML = vnc;
@@ -69,7 +72,16 @@ function enhanceSAL() {
   var script = document.createElement('script');
   script.textContent = selectAll;
   (document.head||document.documentElement).appendChild(script);
+  console.log(script);
   script.remove();
+  script = document.createElement("script");
+  script.type = "text/plain";
+  script.src = "https://raw.githubusercontent.com/christianbach/tablesorter/master/jquery.tablesorter.js";
+(document.head||document.documentElement).appendChild(script);
+
+
+
+
 
   //prep for button addition for ARD Plist Function
   sideBarLength = document.getElementsByClassName('sidebar-nav navbar-collapse')[0].getElementsByTagName('ul')[0].getElementsByTagName('li').length;
@@ -80,15 +92,14 @@ function enhanceSAL() {
   var table2Edit = document.getElementById('DataTables_Table_0');
   var tableHead = table2Edit.tHead.children[0];
 
+  header2Copy = tableHead.children[0];
+
 
   //Takes total number of columns to find a percentage that each column will split equally
   numof_col2Insert = col2Insert.length + 3;
   th_percentage = (one /= numof_col2Insert) * 100;
   //Add Columns to Header and resize them with the calculated percentage above
-  for (i = 0; i < col2Insert.length; i++) {
-    tableHead.appendChild(col2Insert[i]);
-    table2Edit.getElementsByTagName('th')[i].style.width=th_percentage+"%";
-      }
+
   rows = table2Edit.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
   length = rows.length;
   //iterate through each of the returned machines to add various elements to appended columns
@@ -96,46 +107,50 @@ function enhanceSAL() {
 
   for (i = 0; i < length; i++){
     url[i] = rows[i].getElementsByTagName("td")[0].getElementsByTagName('a')[0].getAttribute('href');
-    console.log(url[i]);
-    insertVNC[i] = rows[i].insertCell(-1);
-    insertSerial[i] = rows[i].insertCell(-1);
-    insertVersion[i] = rows[i].insertCell(-1);
-    insertFreeDiskSpace[i] = rows[i].insertCell(-1);}
+  }
 
-    console.log(url);
 
-    var promises = url.map(url =>
-          fetch("https://onemorething.kennesaw.edu" + url,{
-            credentials: 'include'
-          }).then(resp => resp.text())
-        );
-        console.log(promises);
+  var promises = url.map(url =>
+        fetch("https://onemorething.kennesaw.edu" + url,{
+          credentials: 'include'
+        }).then(resp => resp.text())
+      );
 
       Promise.all(promises).then(texts => {
+        console.log(col2Insert.length);
+        for (i = 0; i < col2Insert.length; i++) {
+          tableHead.appendChild(col2Insert[i]);
+          table2Edit.getElementsByTagName('th')[i].style.width=th_percentage+"%";
+            }
 
         for (i = 0; i < url.length; i++) {
 
-        htmlString = texts[i]
-                  , parser = new DOMParser()
-                  , doc = parser.parseFromString(htmlString,"text/html")
-                  , test = doc.getElementById('page-wrapper').children[1]
-                  , ip_address = doc.getElementsByClassName('col-md-5')[0].children[5].children[0].children[0].children[10].innerHTML
-                  , serial_num = doc.getElementsByClassName('col-md-5')[0].children[5].children[0].children[0].children[8].innerHTML
-                  , macos_vers = doc.getElementsByClassName('col-md-5')[0].children[5].children[0].children[0].children[14].innerHTML
-                  , free_disk = doc.getElementsByClassName('col-md-5')[0].children[5].children[0].children[0].children[16].innerHTML;
-                //Actually insert the variables obtained above
-                ip_array = ip_address.split(", ");
-                for(j = 0; j < ip_array.length; j++)
-                insertVNC[i].innerHTML += ' <a href="vnc://itshw:@' + ip_array[j] +'">' + ip_array[j]+'</a> <br/> ';
-                insertSerial[i].innerHTML = serial_num;
-                insertVersion[i].innerHTML = macos_vers.match(/\d{2,2}\.\d{1,2}\.?\d{1,2}/);
-                insertFreeDiskSpace[i].innerHTML = free_disk;
+          insertVNC[i] = rows[i].insertCell(-1);
+          insertSerial[i] = rows[i].insertCell(-1);
+          insertVersion[i] = rows[i].insertCell(-1);
+          insertFreeDiskSpace[i] = rows[i].insertCell(-1);
 
-                // For ARD
-                hostname[i] = rows[i].getElementsByTagName("td")[0].getElementsByTagName('a')[0].innerHTML;
-                hostname[i] = hostname[i].replace(/\s+/g, '');
-                hostIP[i] = ip_array[0];
-                done[i] = 1;}
+          htmlString = texts[i]
+                    , parser = new DOMParser()
+                    , doc = parser.parseFromString(htmlString,"text/html")
+                    , test = doc.getElementById('page-wrapper').children[1]
+                    , ip_address = doc.getElementsByClassName('col-md-5')[0].children[5].children[0].children[0].children[10].innerHTML
+                    , serial_num = doc.getElementsByClassName('col-md-5')[0].children[5].children[0].children[0].children[8].innerHTML
+                    , macos_vers = doc.getElementsByClassName('col-md-5')[0].children[5].children[0].children[0].children[14].innerHTML
+                    , free_disk = doc.getElementsByClassName('col-md-5')[0].children[5].children[0].children[0].children[16].innerHTML;
+                  //Actually insert the variables obtained above
+                  ip_array = ip_address.split(", ");
+                  for(j = 0; j < ip_array.length; j++)
+                  insertVNC[i].innerHTML += ' <a href="vnc://itshw:@' + ip_array[j] +'">' + ip_array[j]+'</a> <br/> ';
+                  insertSerial[i].innerHTML = serial_num;
+                  insertVersion[i].innerHTML = macos_vers.match(/\d{2,2}\.\d{1,2}\.?\d{1,2}/);
+                  insertFreeDiskSpace[i].innerHTML = free_disk;
+
+                  // For ARD
+                  hostname[i] = rows[i].getElementsByTagName("td")[0].getElementsByTagName('a')[0].innerHTML;
+                  hostname[i] = hostname[i].replace(/\s+/g, '');
+                  hostIP[i] = ip_array[0];
+                  done[i] = 1;}
 
       }).then(addButton);
 
@@ -249,6 +264,25 @@ function addButton() {
   button2Insert.setAttribute('href',`javascript:void(0)`);
   button2Insert.addEventListener("click", genPlist, false);
   sidebarLI.appendChild(button2Insert);
+
+  var table2Edit = document.getElementById('DataTables_Table_0');
+  console.log(table2Edit);
+  table2Edit.classList.add("tablesorter");
+
+
+  // const getCellValue = (tr, idx) => tr.children[idx].innerText || tr.children[idx].textContent;
+  //
+  // const comparer = (idx, asc) => (a, b) => ((v1, v2) =>
+  //     v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2)
+  //     )(getCellValue(asc ? a : b, idx), getCellValue(asc ? b : a, idx));
+  //
+  // // do the work...
+  // document.querySelectorAll('th').forEach(th => th.addEventListener('click', (() => {
+  //     const table = th.closest('table');
+  //     Array.from(table.querySelectorAll('tr:nth-child(n+2)'))
+  //         .sort(comparer(Array.from(th.parentNode.children).indexOf(th), this.asc = !this.asc))
+  //         .forEach(tr => table.appendChild(tr) );
+  // })));
 }
 
 
